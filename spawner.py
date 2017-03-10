@@ -153,9 +153,14 @@ def count_failures(suites):
 
 def update_required_context(suites):
 
-    # only send 'required' context for branches
     if 'github_pull_id' in os.environ:
-        return
+        fallback_url = ('https://github.com/%s/pull/%s' %
+                        (os.environ['github_repo'],
+                         os.environ['github_pull_id']))
+    else:
+        fallback_url = ('https://github.com/%s/commits/%s' %
+                        (os.environ['github_repo'],
+                         os.environ['github_branch']))
 
     # don't send 'required' context if we're only targeting some testsuites
     if 'github_contexts' in os.environ:
@@ -178,10 +183,9 @@ def update_required_context(suites):
                 url = f.read().strip()
         else:
             # Something went really wrong in the tester. Just link back to the
-            # branch for now, though we should probably just capture the same
-            # text we used to update the commit status.
-            url = ('https://github.com/%s/commits/%s' %
-                   (os.environ['github_repo'], os.environ['github_branch']))
+            # branch/PR for now, though we should probably just capture the
+            # same text we used to update the commit status.
+            url = fallback_url
         result = (suite['rc'] == 0)
         results_suites.append((name, result, url))
 
